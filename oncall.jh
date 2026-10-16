@@ -22,7 +22,6 @@ application {
     enableHibernateCache true
 
     clientFramework angular
-    clientTheme flatly
     buildTool maven
 
     enableTranslation true
@@ -95,7 +94,7 @@ entity Alerta {
   fingerprint String required maxlength(120)
   origen OrigenAlerta required
   resumen String required maxlength(200)
-  payload TextBlob
+  payload String maxlength(4000)
   recibidaEn Instant required
   procesada Boolean required
 }
@@ -106,7 +105,7 @@ entity Alerta {
  */
 entity Incidente {
   titulo String required maxlength(140)
-  descripcion TextBlob
+  descripcion String maxlength(2000)
   severidad Severidad required
   estado EstadoIncidente required
   detectadoEn Instant required
@@ -217,9 +216,9 @@ entity Notificacion {
 entity Postmortem {
   titulo String required maxlength(140)
   resumen String required maxlength(500)
-  causaRaiz TextBlob required
-  lineaDeTiempo TextBlob
-  leccionesAprendidas TextBlob
+  causaRaiz String required maxlength(2000)
+  lineaDeTiempo String maxlength(4000)
+  leccionesAprendidas String maxlength(2000)
   publicado Boolean required
   publicadoEn Instant
 }
@@ -248,6 +247,62 @@ enum EstadoAccion {
 }
 
 // ---------------------------------------------------------------------
+// 5 · VENTANAS DE MANTENIMIENTO  ·  cuando una alerta NO es un incidente
+//     (Extension 5 del TP · Regla C)
+// ---------------------------------------------------------------------
+
+/**
+ * Rango horario programado en el que las alertas de los servicios
+ * cubiertos no generan incidente. inicio/fin definen la PRIMERA
+ * ocurrencia; si hay recurrencia, se repite con la misma duracion
+ * hasta recurrenciaHasta. Las horas se interpretan en zonaHoraria
+ * (igual que en Rotacion), asi "martes 02:00" sigue siendo 02:00
+ * aunque cambie el horario de verano.
+ */
+entity VentanaDeMantenimiento {
+  nombre String required unique maxlength(60)
+  descripcion String maxlength(500)
+  inicio Instant required
+  fin Instant required
+  zonaHoraria String required maxlength(50)
+  recurrencia TipoRecurrencia required
+  diasSemana String maxlength(30)
+  recurrenciaHasta LocalDate
+  activa Boolean required
+}
+
+/**
+ * Que servicio cubre una ventana y que se suprime durante ella.
+ */
+entity ServicioEnVentana {
+  suprimirAlertas Boolean required
+  suprimirEscalamiento Boolean required
+  notas String maxlength(255)
+}
+
+/**
+ * Modifica UNA ocurrencia puntual de una ventana recurrente:
+ * cancelarla, moverla o extenderla. Es el equivalente al
+ * TurnoDeGuardia con esReemplazo de las rotaciones.
+ */
+entity ExcepcionDeVentana {
+  fechaOcurrencia LocalDate required
+  tipo TipoExcepcionVentana required
+  nuevoInicio Instant
+  nuevoFin Instant
+  motivo String required maxlength(255)
+  creadaEn Instant required
+}
+
+enum TipoRecurrencia {
+  NINGUNA, DIARIA, SEMANAL, MENSUAL
+}
+
+enum TipoExcepcionVentana {
+  CANCELACION, REPROGRAMACION, EXTENSION
+}
+
+// ---------------------------------------------------------------------
 // RELACIONES
 // ---------------------------------------------------------------------
 
@@ -267,6 +322,13 @@ relationship ManyToOne {
 
   Notificacion{incidente(titulo) required} to Incidente{notificacion}
   AccionCorrectiva{postmortem(titulo) required} to Postmortem{accion}
+
+  // Extension 5 · Ventanas de mantenimiento
+  VentanaDeMantenimiento{equipo(nombre) required} to Equipo{ventana}
+  ServicioEnVentana{ventana(nombre) required} to VentanaDeMantenimiento{servicioCubierto}
+  ServicioEnVentana{servicio(nombre) required} to Servicio{ventanaAsignada}
+  ExcepcionDeVentana{ventana(nombre) required} to VentanaDeMantenimiento{excepcion}
+  Alerta{suprimidaPorVentana(nombre)} to VentanaDeMantenimiento{alertaSuprimida}
 }
 
 /**
@@ -292,6 +354,8 @@ relationship ManyToOne {
   PasoEscalamiento{destinatarioDirecto(login)} to User with builtInEntity
   Notificacion{destinatario(login) required} to User with builtInEntity
   AccionCorrectiva{responsable(login)} to User with builtInEntity
+  VentanaDeMantenimiento{creadaPor(login) required} to User with builtInEntity
+  ExcepcionDeVentana{autorizadaPor(login)} to User with builtInEntity
 }
 
 // ---------------------------------------------------------------------
@@ -304,4 +368,7 @@ service all with serviceClass
 paginate Incidente, Alerta, Postmortem with pagination
 paginate EventoDeIncidente, Notificacion, TurnoDeGuardia with infinite-scroll
 
+paginate VentanaDeMantenimiento with pagination
+
 filter Incidente, Alerta, Servicio, Notificacion
+filter VentanaDeMantenimiento, ServicioEnVentana, ExcepcionDeVentana

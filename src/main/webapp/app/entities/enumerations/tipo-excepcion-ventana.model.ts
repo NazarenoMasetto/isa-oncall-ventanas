@@ -1,0 +1,7 @@
+export enum TipoExcepcionVentana {
+  CANCELACION = 'CANCELACION',
+
+  REPROGRAMACION = 'REPROGRAMACION',
+
+  EXTENSION = 'EXTENSION',
+}

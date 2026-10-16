@@ -1,204 +1,289 @@
-# OnCall · Sistema de guardias e incidentes
+# oncall
 
-Caso de estudio de **Ingeniería de Software Aplicada** — Universidad de Mendoza.
+This application was generated using JHipster 9.2.0, you can find documentation and help at [https://www.jhipster.tech/documentation-archive/v9.2.0](https://www.jhipster.tech/documentation-archive/v9.2.0).
 
----
+## Project Structure
 
-## El problema
+Node is required for generation and recommended for development. `package.json` is always generated for a better development experience with prettier, commit hooks, scripts and so on.
 
-Un equipo opera varios servicios en producción. Las herramientas de monitoreo tiran alertas todo el día: la mayoría es ruido, algunas son una interrupción real. Alguien tiene que estar de guardia, alguien tiene que ser despertado a las 3 de la mañana, y cuando el fuego se apaga hay que medir cuánto tardamos y escribir qué aprendimos.
+In the project root, JHipster generates configuration files for tools like git, prettier, eslint, husky, and others that are well known and you can find references in the web.
 
-Eso es lo que vamos a construir. No es casual: **es el mismo problema del que trata la materia**. Toda la complejidad que un framework nos permite delegar, después hay que operarla.
+`/src/*` structure follows default Java structure.
 
----
+- `.yo-rc.json` - Yeoman configuration file
+  JHipster configuration is stored in this file at `generator-jhipster` key. You may find `generator-jhipster-*` for specific blueprints configuration.
+- `.yo-resolve` (optional) - Yeoman conflict resolver
+  Allows to use a specific action when conflicts are found skipping prompts for files that matches a pattern. Each line should match `[pattern] [action]` with pattern been a [Minimatch](https://github.com/isaacs/minimatch#minimatch) pattern and action been one of skip (default if omitted) or force. Lines starting with `#` are considered comments and are ignored.
+- `.jhipster/*.json` - JHipster entity configuration files
 
-## Requisitos previos
+- `npmw` - wrapper to use locally installed npm.
+  JHipster installs Node and npm locally using the build tool by default. This wrapper makes sure npm is installed locally and uses it avoiding some differences different versions can cause. By using `./npmw` instead of the traditional `npm` you can configure a Node-less environment to develop or test your application.
+- `/src/main/docker` - Docker configurations for the application and services that the application depends on
 
-Traer instalado y funcionando **antes** de la clase:
+## Development
 
-| Herramienta | Verificación |
-|---|---|
-| [Docker Desktop](https://www.docker.com/products/docker-desktop) | `docker --version` |
-| [Git](https://git-scm.com/downloads) | `git --version` |
-| [Visual Studio Code](https://code.visualstudio.com/download) | — |
-| Extensión **Dev Containers** (`ms-vscode-remote.remote-containers`) | — |
+The build system will install automatically the recommended version of Node and npm.
 
-> ⚠️ La primera vez que abras el Dev Container se descargan varios GB. **Hacelo en casa, no en la facultad.**
-
----
-
-## Clase 1 · Levantar el entorno
-
-El camino depende de tu sistema operativo. **En Windows no alcanza con clonar y abrir la carpeta** — leé la sección que te corresponde.
-
-### Windows · cloná dentro de un volumen Docker
-
-`Ctrl+Shift+P` → **Dev Containers: Clone Repository in Container Volume**, y pegá:
-
-```
-https://github.com/jeremiascastilloum/isa-oncall-monolithic.git
-```
-
-VS Code clona el repo adentro de un volumen de Docker y abre el contenedor apuntando ahí. No hace falta `git clone` previo ni `code .`.
-
-**Por qué.** Si clonás a una carpeta de Windows (`C:\Users\...`) y hacés *Reopen in Container*, Docker Desktop expone esa carpeta sobre un filesystem llamado **9p**, que no soporta permisos de Linux: todos los archivos se ven como `root` y el usuario del contenedor no puede cambiarles el modo. Escribir archivos nuevos funciona, así que el entorno *parece* andar bien — hasta que en la Clase 2 el generador intenta sobrescribir un archivo existente, llama a `chmod` y muere con `EPERM: operation not permitted`.
-
-De paso, el volumen es bastante más rápido: Maven, npm y Angular hacen mucha lectura y escritura de archivos chicos, y sobre 9p eso se arrastra.
-
-**El costo:** el código vive adentro del volumen, no en tu disco de Windows. No lo vas a ver en el Explorador. Trabajás desde VS Code y corrés `git` desde la terminal del contenedor, que es lo que vas a hacer igual.
-
-### Linux / macOS
+We provide a wrapper to launch npm.
+You will only need to run this command when dependencies change in [package.json](package.json).
 
 ```bash
-git clone https://github.com/jeremiascastilloum/isa-oncall-monolithic.git
-cd isa-oncall-monolithic
-code .
+./npmw install
 ```
 
-Cuando VS Code muestre el aviso *"Folder contains a Dev Container configuration file"* → **Reopen in Container**.
+We use npm scripts and [Angular CLI](https://angular.dev/tools/cli) with esbuild as our build system.
 
-Si no aparece: `Ctrl+Shift+P` → **Dev Containers: Reopen in Container**.
-
-### Verificación
-
-Al terminar, adentro del contenedor:
+Run the following commands in two separate terminals to create a blissful development experience where your browser
+auto-refreshes when files change on your hard drive.
 
 ```bash
-java -version      # 21
-node --version     # 22
-jhipster --version # 9.2.0
-docker ps          # sin errores
+./npmw run backend:start
+./npmw run start
 ```
 
-Con eso alcanza. Todavía no generamos nada.
+Npm is also used to manage CSS and JavaScript dependencies used in this application. You can upgrade dependencies by
+specifying a newer version in [package.json](package.json). You can also run `./npmw update` and `./npmw install` to manage dependencies.
+Add the `help` flag on any command to see how you can use it. For example, `./npmw help update`.
 
----
+The `./npmw run` command will list all the scripts available to run for this project.
 
-## Clase 2 · Del modelo a la aplicación
+### PWA Support
 
-### 1. Mirar el modelo
+JHipster ships with PWA (Progressive Web App) support, and it's turned off by default. One of the main components of a PWA is a service worker.
 
-Abrí [JDL Studio](https://start.jhipster.tech/jdl-studio/) y pegá el contenido de [`oncall.jh`](./oncall.jh). Vas a ver el diagrama entidad-relación completo: 13 entidades, 10 enumeraciones, y las relaciones entre ellas.
+The service worker initialization code is disabled by default. To enable it, uncomment the following code in `src/main/webapp/app/app.config.ts`:
 
-### 2. Generar
+```typescript
+ServiceWorkerModule.register('ngsw-worker.js', { enabled: false }),
+```
 
-Desde la terminal del Dev Container:
+### Managing dependencies
+
+For example, to add [Leaflet](https://leafletjs.com/) library as a runtime dependency of your application, you would run the following command:
 
 ```bash
-jhipster jdl oncall.jh
+./npmw install --save --save-exact leaflet
 ```
 
-Tomate el tiempo de mirar la consola. Cuando termine, contá los archivos:
+To benefit from TypeScript type definitions from [DefinitelyTyped](https://definitelytyped.org/) repository in development, you would run the following command:
 
 ```bash
-git status --porcelain | wc -l
+./npmw install --save-dev --save-exact @types/leaflet
 ```
 
-### 3. Parchear el tema
+Then you would import the JS and CSS files specified in library's installation instructions so that [esbuild][] knows about them:
+Edit [src/main/webapp/app/app.config.ts](src/main/webapp/app/app.config.ts) file:
 
-Agregá al final de `src/main/webapp/content/scss/_bootstrap-variables.scss` — un archivo que recién existe después de generar:
-
-```scss
-$web-font-path: false;
+```typescript
+import 'leaflet/dist/leaflet.js';
 ```
 
-Sin esa línea el build del frontend falla y `./mvnw` no llega a arrancar:
+Edit [src/main/webapp/content/scss/vendor.scss](src/main/webapp/content/scss/vendor.scss) file:
 
+```typescript
+@import 'leaflet/dist/leaflet.css';
 ```
-✘ [ERROR] Could not resolve "../../../../../node_modules/bootswatch/dist/flatly||file:https://fonts.googleapis.com/css2?family=Lato..."
-```
 
-**Por qué.** El tema `flatly` que pide el JDL trae la fuente Lato desde Google Fonts con un `@import url()`. Esa URL es absoluta: le corresponde resolverla al navegador, no al bundler. Pero el builder de Angular 21 la trata como ruta de archivo y la reescribe relativa al `.scss` que la importa — de ahí el `||` en el mensaje, que es el separador que usa internamente. Después no encuentra el archivo y aborta.
+Note: There are still a few other things remaining to do for Leaflet that we won't detail here.
 
-Bootswatch envuelve ese import en un `@if $web-font-path`, así que anulando la variable desaparece. La app queda con las fuentes del sistema y sin depender de un CDN externo, que para algo pensado para operarse on-premise es más sano.
+For further instructions on how to develop with JHipster, have a look at [Using JHipster in development](https://www.jhipster.tech/development/).
 
-> Si volvés a generar con `--force`, este archivo se pisa y hay que repetir el paso.
+### Using Angular CLI
 
-### 4. Levantar la base de datos
+You can also use [Angular CLI](https://angular.dev/tools/cli) to generate some custom client code.
+
+For example, the following command:
 
 ```bash
-docker compose -f src/main/docker/postgresql.yml up -d
+ng generate component my-component
 ```
 
-### 5. Levantar la aplicación
-
-Dos terminales:
+will generate few files:
 
 ```bash
-./mvnw          # backend, puerto 8080
+create src/main/webapp/app/my-component/my-component.html
+create src/main/webapp/app/my-component/my-component.ts
+update src/main/webapp/app/app.config.ts
 ```
+
+## Building for production
+
+### Packaging as jar
+
+To build the final jar and optimize the oncall application for production, run:
 
 ```bash
-npm start       # frontend, puerto 9000
+./mvnw -Pprod clean verify
 ```
 
-Entrás en `http://localhost:9000` con `admin` / `admin`.
-
----
-
-## Lo que el generador NO te dio
-
-Recorré la aplicación. Podés dar de alta servicios, equipos, rotaciones, turnos, incidentes y alertas. Todo tiene ABM, validaciones, paginación, filtros, seguridad y tests.
-
-Y sin embargo la aplicación **no sirve para nada todavía**, porque falta exactamente lo que ningún generador puede adivinar:
-
-1. **Deduplicar alertas.** Llega una alerta con un `fingerprint` que ya existe en un incidente abierto: ¿se pega a ese incidente o abre uno nuevo?
-2. **Resolver quién está de guardia ahora.** Dado un instante y una rotación, ¿qué persona es la responsable? ¿Y si hay un reemplazo cargado?
-3. **Ejecutar el escalamiento.** Nadie reconoció el incidente en 5 minutos: hay que pasar al siguiente `PasoEscalamiento` y disparar la notificación.
-4. **Calcular MTTA, MTTR y cumplimiento de SLO.** Con las marcas de tiempo del incidente y el `ObjetivoDeServicio` que aplica a su severidad.
-
-Esas cuatro reglas son el material de las clases siguientes.
-
----
-
-## Estructura del repositorio
-
-```
-isa-oncall-monolithic/
-├── .devcontainer/
-│   ├── devcontainer.json         # Java 21 + Node 22 + Docker + JHipster 9.2
-│   ├── Dockerfile                # imagen base + parche del repo apt de Yarn
-│   └── devcontainer-lock.json    # versiones fijas de los features
-├── docs/
-│   └── modelo.md            # el modelo explicado en prosa
-├── oncall.jh                # el modelo JDL
-└── README.md
-```
-
----
-
-## Versiones
-
-| | |
-|---|---|
-| JHipster | 9.2.0 |
-| Spring Boot | 4.0.x |
-| Java | 21 (LTS) |
-| Angular | 20.x |
-| Node | 22 (LTS) |
-| PostgreSQL | 17 |
-| Tests | JUnit 5 · Vitest · Cypress |
-
----
-
-## Si algo falla
-
-**El Dev Container no arranca / se queda colgado.** Revisá que Docker Desktop esté corriendo y que tenga al menos 8 GB de memoria asignada (Settings → Resources).
-
-**`jhipster jdl` falla con un error de parseo.** Confirmá la versión con `jhipster --version`. El JDL está escrito para 9.2.0.
-
-**`jhipster jdl` genera cientos de archivos y después muere con `EPERM: operation not permitted, chmod`.** Estás en Windows con el repo clonado en una carpeta de Windows. Es lo que explica la [Clase 1](#windows--cloná-dentro-de-un-volumen-docker): volvé a clonar con **Clone Repository in Container Volume** y generá de nuevo desde ahí.
-
-Si querés limpiar la generación a medias antes de rehacerla:
+This will concatenate and minify the client CSS and JavaScript files. It will also modify `index.html` so it references these new files.
+To ensure everything worked, run:
 
 ```bash
-git checkout -- . && git clean -fd
+java -jar target/*.jar
 ```
 
-Borra todo lo que el generador dejó. `oncall.jh` está versionado, así que no se pierde.
+Then navigate to [http://localhost:8080](http://localhost:8080) in your browser.
 
-**`./mvnw` falla con `Could not resolve ".../bootswatch/dist/flatly||file:https://fonts.googleapis.com/..."`.** Te salteaste el [paso 3 de la Clase 2](#3-parchear-el-tema), o regeneraste con `--force` y se pisó el archivo. Volvé a agregar `$web-font-path: false;` al final de `src/main/webapp/content/scss/_bootstrap-variables.scss`.
+Refer to [Using JHipster in production][] for more details.
 
-**El build tira decenas de `Sass @import rules are deprecated`.** Son warnings de Dart Sass, no rompen nada. Vienen de los templates de JHipster y se van a ir cuando el generador migre a `@use`.
+### Packaging as war
 
-**No querés depender de PostgreSQL.** Cambiá `devDatabaseType postgresql` por `devDatabaseType h2Disk` en el `oncall.jh` antes de generar. La aplicación levanta sin Docker, pero perdés el ejercicio de contenedores.
+To package your application as a war in order to deploy it to an application server, run:
+
+```bash
+./mvnw -Pprod,war clean verify
+```
+
+### JHipster Control Center
+
+JHipster Control Center can help you manage and control your application(s). You can start a local control center server (accessible on http://localhost:7419) with:
+
+```bash
+docker compose -f src/main/docker/jhipster-control-center.yml up
+```
+
+## Testing
+
+### Spring Boot tests
+
+To launch your application's tests, run:
+
+```bash
+./mvnw verify
+```
+
+### Client tests
+
+Unit tests are run by Vitest. They're located near components and can be run with:
+
+```bash
+./npmw test
+```
+
+#### E2E tests
+
+UI end-to-end tests are powered by [Cypress][]. They're located in [src/test/javascript/cypress/](src/test/javascript/cypress/)
+and can be run by starting Spring Boot in one terminal (`./npmw run app:start`) and running the tests (`./npmw run e2e`) in a second one.
+
+Before running Cypress tests, it's possible to specify user credentials by overriding the `CYPRESS_E2E_USERNAME` and `CYPRESS_E2E_PASSWORD` environment variables.
+
+```bash
+export CYPRESS_E2E_USERNAME="<your-username>"
+export CYPRESS_E2E_PASSWORD="<your-password>"
+```
+
+See Cypress documentation for setting OS [environment variables](https://docs.cypress.io/app/references/environment-variables#Setting) to learn more.
+
+#### Lighthouse audits
+
+You can execute automated [Lighthouse audits](https://developer.chrome.com/docs/lighthouse/overview) with [cypress-audit](https://github.com/mfrachet/cypress-audit) by running `./npmw run e2e:cypress:audits`.
+
+You should only run the audits when your application is packaged with the production profile.
+
+The Lighthouse report is created in `target/cypress/lhreport.html`.
+
+## Others
+
+### Code quality using Sonar
+
+Sonar is used to analyse code quality. You can start a local Sonar server (accessible on http://localhost:9001) with:
+
+```bash
+docker compose -f src/main/docker/sonar.yml up -d
+```
+
+Note: we have turned off forced authentication redirect for UI in [src/main/docker/sonar.yml](src/main/docker/sonar.yml) for out of the box experience while trying out SonarQube, for real use cases turn it back on.
+
+You can run a Sonar analysis with using the [sonar-scanner](https://docs.sonarqube.org/display/SCAN/Analyzing+with+SonarQube+Scanner) or by using the maven plugin.
+
+Then, run a Sonar analysis:
+
+```bash
+./mvnw -Pprod clean verify sonar:sonar -Dsonar.login=admin -Dsonar.password=admin
+```
+
+If you need to re-run the Sonar phase, please be sure to specify at least the `initialize` phase since Sonar properties are loaded from the sonar-project.properties file.
+
+```bash
+./mvnw initialize sonar:sonar -Dsonar.login=admin -Dsonar.password=admin
+```
+
+Additionally, Instead of passing `sonar.password` and `sonar.login` as CLI arguments, these parameters can be configured from [sonar-project.properties](sonar-project.properties) as shown below:
+
+```bash
+sonar.login=admin
+sonar.password=admin
+```
+
+For more information, refer to the [Code quality page][].
+
+### Docker Compose support
+
+JHipster generates a number of Docker Compose configuration files in the [src/main/docker/](src/main/docker/) folder to launch required third party services.
+
+For example, to start required services in Docker containers, run:
+
+```bash
+docker compose -f src/main/docker/services.yml up -d
+```
+
+To stop and remove the containers, run:
+
+```bash
+docker compose -f src/main/docker/services.yml down
+```
+
+[Spring Docker Compose Integration](https://docs.spring.io/spring-boot/reference/features/dev-services.html) is enabled by default. It's possible to disable it in `application.yml`:
+
+```yaml
+spring:
+  ...
+  docker:
+    compose:
+      enabled: false
+```
+
+You can also fully dockerize your application and all the services that it depends on.
+To achieve this, first build a Docker image of your app by running:
+
+```bash
+npm run java:docker
+```
+
+Or build an arm64 Docker image when using an arm64 processor OS, i.e., Apple Silicon chips (M*), running:
+
+```bash
+npm run java:docker:arm64
+```
+
+Then run:
+
+```bash
+docker compose -f src/main/docker/app.yml up -d
+```
+
+For more information refer to [Docker and Docker-Compose](https://www.jhipster.tech/documentation-archive/v9.2.0/docker-compose/), this page also contains information on the Docker Compose sub-generator (`jhipster docker-compose`), which is able to generate Docker configurations for one or several JHipster applications.
+
+## Continuous Integration (optional)
+
+To configure CI for your project, run the ci-cd sub-generator (`jhipster ci-cd`), this will let you generate configuration files for a number of Continuous Integration systems. Consult the [Setting up Continuous Integration](https://www.jhipster.tech/documentation-archive/v9.2.0/setting-up-ci/) page for more information.
+
+## References
+
+- [JHipster Homepage and latest documentation](https://www.jhipster.tech/)
+- [JHipster 9.2.0 archive](https://www.jhipster.tech/documentation-archive/v9.2.0)
+- [Using JHipster in development](https://www.jhipster.tech/documentation-archive/v9.2.0/development/)
+- [Using Docker and Docker-Compose](https://www.jhipster.tech/documentation-archive/v9.2.0/docker-compose)
+- [Using JHipster in production](https://www.jhipster.tech/documentation-archive/v9.2.0/production/)
+- [Running tests page](https://www.jhipster.tech/documentation-archive/v9.2.0/running-tests/)
+- [Code quality page](https://www.jhipster.tech/documentation-archive/v9.2.0/code-quality/)
+- [Setting up Continuous Integration](https://www.jhipster.tech/documentation-archive/v9.2.0/setting-up-ci/)
+- [Node.js](https://nodejs.org/)
+- [NPM](https://www.npmjs.com/)
+- [BrowserSync](https://www.browsersync.io/)
+- [Jest](https://jestjs.io)
+- [Leaflet](https://leafletjs.com/)
+- [DefinitelyTyped](https://definitelytyped.org/)
+- [Angular CLI](https://angular.dev/tools/cli)
+- [Cypress](https://www.cypress.io/)

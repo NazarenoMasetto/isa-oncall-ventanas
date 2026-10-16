@@ -1,0 +1,63 @@
+{
+  "annotations": {
+    "changelogDate": "20231204224823"
+  },
+  "applications": ["oncall"],
+  "documentation": "Modifica UNA ocurrencia puntual de una ventana recurrente:\\ncancelarla, moverla o extenderla. Es el equivalente al\\nTurnoDeGuardia con esReemplazo de las rotaciones.",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "fechaOcurrencia",
+      "fieldType": "LocalDate",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "tipo",
+      "fieldType": "TipoExcepcionVentana",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "CANCELACION,REPROGRAMACION,EXTENSION"
+    },
+    {
+      "fieldName": "nuevoInicio",
+      "fieldType": "Instant"
+    },
+    {
+      "fieldName": "nuevoFin",
+      "fieldType": "Instant"
+    },
+    {
+      "fieldName": "motivo",
+      "fieldType": "String",
+      "fieldValidateRules": ["required", "maxlength"],
+      "fieldValidateRulesMaxlength": "255"
+    },
+    {
+      "fieldName": "creadaEn",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "jpaMetamodelFiltering": true,
+  "name": "ExcepcionDeVentana",
+  "relationships": [
+    {
+      "otherEntityField": "nombre",
+      "otherEntityName": "ventanaDeMantenimiento",
+      "otherEntityRelationshipName": "excepcion",
+      "relationshipName": "ventana",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one",
+      "relationshipValidateRules": "required"
+    },
+    {
+      "otherEntityField": "login",
+      "otherEntityName": "user",
+      "relationshipName": "autorizadaPor",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one",
+      "relationshipWithBuiltInEntity": true
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

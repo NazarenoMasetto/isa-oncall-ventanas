@@ -1,0 +1,50 @@
+{
+  "annotations": {
+    "changelogDate": "20231204224723"
+  },
+  "applications": ["oncall"],
+  "documentation": "Que servicio cubre una ventana y que se suprime durante ella.",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "suprimirAlertas",
+      "fieldType": "Boolean",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "suprimirEscalamiento",
+      "fieldType": "Boolean",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "notas",
+      "fieldType": "String",
+      "fieldValidateRules": ["maxlength"],
+      "fieldValidateRulesMaxlength": "255"
+    }
+  ],
+  "jpaMetamodelFiltering": true,
+  "name": "ServicioEnVentana",
+  "relationships": [
+    {
+      "otherEntityField": "nombre",
+      "otherEntityName": "ventanaDeMantenimiento",
+      "otherEntityRelationshipName": "servicioCubierto",
+      "relationshipName": "ventana",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one",
+      "relationshipValidateRules": "required"
+    },
+    {
+      "otherEntityField": "nombre",
+      "otherEntityName": "servicio",
+      "otherEntityRelationshipName": "ventanaAsignada",
+      "relationshipName": "servicio",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one",
+      "relationshipValidateRules": "required"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

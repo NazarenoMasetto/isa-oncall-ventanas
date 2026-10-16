@@ -1,0 +1,105 @@
+{
+  "annotations": {
+    "changelogDate": "20231204224623"
+  },
+  "applications": ["oncall"],
+  "documentation": "Rango horario programado en el que las alertas de los servicios\\ncubiertos no generan incidente. inicio/fin definen la PRIMERA\\nocurrencia; si hay recurrencia, se repite con la misma duracion\\nhasta recurrenciaHasta. Las horas se interpretan en zonaHoraria\\n(igual que en Rotacion), asi \"martes 02:00\" sigue siendo 02:00\\naunque cambie el horario de verano.",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "nombre",
+      "fieldType": "String",
+      "fieldValidateRules": ["required", "unique", "maxlength"],
+      "fieldValidateRulesMaxlength": "60"
+    },
+    {
+      "fieldName": "descripcion",
+      "fieldType": "String",
+      "fieldValidateRules": ["maxlength"],
+      "fieldValidateRulesMaxlength": "500"
+    },
+    {
+      "fieldName": "inicio",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "fin",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "zonaHoraria",
+      "fieldType": "String",
+      "fieldValidateRules": ["required", "maxlength"],
+      "fieldValidateRulesMaxlength": "50"
+    },
+    {
+      "fieldName": "recurrencia",
+      "fieldType": "TipoRecurrencia",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "NINGUNA,DIARIA,SEMANAL,MENSUAL"
+    },
+    {
+      "fieldName": "diasSemana",
+      "fieldType": "String",
+      "fieldValidateRules": ["maxlength"],
+      "fieldValidateRulesMaxlength": "30"
+    },
+    {
+      "fieldName": "recurrenciaHasta",
+      "fieldType": "LocalDate"
+    },
+    {
+      "fieldName": "activa",
+      "fieldType": "Boolean",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "jpaMetamodelFiltering": true,
+  "name": "VentanaDeMantenimiento",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityField": "nombre",
+      "otherEntityName": "equipo",
+      "otherEntityRelationshipName": "ventana",
+      "relationshipName": "equipo",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one",
+      "relationshipValidateRules": "required"
+    },
+    {
+      "otherEntityField": "login",
+      "otherEntityName": "user",
+      "relationshipName": "creadaPor",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one",
+      "relationshipValidateRules": "required",
+      "relationshipWithBuiltInEntity": true
+    },
+    {
+      "otherEntityName": "servicioEnVentana",
+      "otherEntityRelationshipName": "ventana",
+      "relationshipName": "servicioCubierto",
+      "relationshipSide": "right",
+      "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "excepcionDeVentana",
+      "otherEntityRelationshipName": "ventana",
+      "relationshipName": "excepcion",
+      "relationshipSide": "right",
+      "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "alerta",
+      "otherEntityRelationshipName": "suprimidaPorVentana",
+      "relationshipName": "alertaSuprimida",
+      "relationshipSide": "right",
+      "relationshipType": "one-to-many"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

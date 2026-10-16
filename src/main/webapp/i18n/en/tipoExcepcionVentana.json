@@ -1,0 +1,10 @@
+{
+  "oncallApp": {
+    "TipoExcepcionVentana": {
+      "null": "",
+      "CANCELACION": "CANCELACION",
+      "REPROGRAMACION": "REPROGRAMACION",
+      "EXTENSION": "EXTENSION"
+    }
+  }
+}
